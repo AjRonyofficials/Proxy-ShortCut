@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Proxy Shortcut</string>
+    <string name="title_proxy_shortcut">Proxy Shortcut</string>
+    <string name="hint_paste_proxy">Paste raw proxy (ip:port:user:pass)</string>
+    <string name="btn_auto_paste">1-Click Auto Paste</string>
+    <string name="route_all_apps">Route All Apps (Off = Selected Only)</string>
+    <string name="btn_select_apps">Select Specific Apps</string>
+    <string name="btn_save_profile">Save Profile</string>
+    <string name="btn_launch_floating">Launch Floating Overlay</string>
+    <string name="btn_connect">Connect</string>
+    <string name="btn_disconnect">Disconnect</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connected">Connected</string>
+</resources>

@@ -1,0 +1,6 @@
+{
+  "name": "Proxy Shortcut",
+  "description": "Real Tun2Socks Engine with Floating Overlay Widget for quick proxy connection and status control",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
