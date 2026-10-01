@@ -5,8 +5,12 @@ import android.content.pm.PackageManager
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import hev.socks5.TProxy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import java.net.InetAddress
 
 class ProxyVpnService : VpnService() {
 
@@ -31,54 +35,72 @@ class ProxyVpnService : VpnService() {
         if (isConnected) return
         val profile = ProfileStorage.getActiveProfile(this) ?: return
 
-        try {
-            val builder = Builder()
-                .setSession("ProxyShortcut")
-                .setMtu(1500)
-                .addAddress("10.0.0.2", 24)
-                .addRoute("0.0.0.0", 0)
-                .addDnsServer("8.8.8.8")
-                .addDnsServer("1.1.1.1")
-
-            if (!profile.routeAllApps && profile.selectedApps.isNotEmpty()) {
-                for (pkg in profile.selectedApps) {
-                    try {
-                        builder.addAllowedApplication(pkg)
-                    } catch (_: PackageManager.NameNotFoundException) {}
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 1. Resolve host IP to prevent DNS resolution loop inside the tunnel
+                val resolvedIp = try {
+                    InetAddress.getByName(profile.host).hostAddress ?: profile.host
+                } catch (_: Exception) {
+                    profile.host
                 }
+
+                // 2. Setup VPN Interface with Google & Cloudflare DNS
+                val builder = Builder()
+                    .setSession("ProxyShortcut")
+                    .setMtu(1500)
+                    .addAddress("10.0.0.2", 24)
+                    .addRoute("0.0.0.0", 0)
+                    .addDnsServer("8.8.8.8")
+                    .addDnsServer("1.1.1.1")
+
+                // 3. Selective Routing / Split Tunneling Rule
+                val useAll = profile.routeAllApps || profile.selectedApps.isEmpty()
+                if (!useAll) {
+                    for (pkg in profile.selectedApps) {
+                        try {
+                            builder.addAllowedApplication(pkg)
+                        } catch (_: PackageManager.NameNotFoundException) {
+                        } catch (_: Exception) {}
+                    }
+                    try {
+                        builder.addAllowedApplication(packageName)
+                    } catch (_: Exception) {}
+                }
+
+                vpnInterface = builder.establish()
+                val fd = vpnInterface?.fd ?: return@launch
+
+                // 4. Generate tun2socks config
+                val authUser = if (profile.username.isNotEmpty()) "username: '${profile.username}'" else ""
+                val authPass = if (profile.password.isNotEmpty()) "password: '${profile.password}'" else ""
+
+                val configContent = """
+                    misc:
+                      task-stack-size: 81920
+                      log-level: warn
+                    tunnel:
+                      name: tun0
+                      mtu: 1500
+                    socks5:
+                      port: ${profile.port}
+                      address: '$resolvedIp'
+                      udp: 'tcp'
+                      $authUser
+                      $authPass
+                """.trimIndent()
+
+                val configFile = File(cacheDir, "socks5.conf")
+                FileOutputStream(configFile).use { it.write(configContent.toByteArray()) }
+
+                // 5. Start native tun2socks engine
+                TProxy.Start(configFile.absolutePath, fd)
+
+                isConnected = true
+                startTimeMs = System.currentTimeMillis()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                stopTunnel()
             }
-
-            vpnInterface = builder.establish()
-            val fd = vpnInterface?.fd ?: return
-
-            val authUser = if (profile.username.isNotEmpty()) "username: '${profile.username}'" else ""
-            val authPass = if (profile.password.isNotEmpty()) "password: '${profile.password}'" else ""
-
-            val configContent = """
-                misc:
-                  task-stack-size: 81920
-                  log-level: warn
-                tunnel:
-                  name: tun0
-                  mtu: 1500
-                socks5:
-                  port: ${profile.port}
-                  address: '${profile.host}'
-                  udp: 'tcp'
-                  $authUser
-                  $authPass
-            """.trimIndent()
-
-            val configFile = File(cacheDir, "socks5.conf")
-            FileOutputStream(configFile).use { it.write(configContent.toByteArray()) }
-
-            TProxy.Start(configFile.absolutePath, fd)
-
-            isConnected = true
-            startTimeMs = System.currentTimeMillis()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            stopTunnel()
         }
     }
 

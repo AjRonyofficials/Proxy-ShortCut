@@ -3,6 +3,7 @@ package com.example
 import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Handler
@@ -13,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -33,12 +35,17 @@ class FloatingWidgetService : Service() {
 
     private lateinit var imgBubble: ImageView
     private lateinit var statusIndicatorDot: View
-    private lateinit var infoContainer: View
-    private lateinit var txtCountry: TextView
-    private lateinit var txtIp: TextView
+    private lateinit var layoutPill: View
+    private lateinit var txtDynamicGeo: TextView
     private lateinit var txtTimer: TextView
 
+    private lateinit var cardDetails: View
+    private lateinit var txtDetailCountryCity: TextView
+    private lateinit var txtDetailIp: TextView
+    private lateinit var btnToggle: Button
+
     private val timerHandler = Handler(Looper.getMainLooper())
+    private var isExpanded = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -61,8 +68,8 @@ class FloatingWidgetService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 100
-            y = 200
+            x = 80
+            y = 180
         }
 
         bindViews()
@@ -74,21 +81,29 @@ class FloatingWidgetService : Service() {
     private fun bindViews() {
         imgBubble = floatingView.findViewById(R.id.imgBubble)
         statusIndicatorDot = floatingView.findViewById(R.id.statusIndicatorDot)
-        infoContainer = floatingView.findViewById(R.id.infoContainer)
-        txtCountry = floatingView.findViewById(R.id.txtCountry)
-        txtIp = floatingView.findViewById(R.id.txtIp)
+        layoutPill = floatingView.findViewById(R.id.layoutPill)
+        txtDynamicGeo = floatingView.findViewById(R.id.txtDynamicGeo)
         txtTimer = floatingView.findViewById(R.id.txtTimer)
+
+        cardDetails = floatingView.findViewById(R.id.cardDetails)
+        txtDetailCountryCity = floatingView.findViewById(R.id.txtDetailCountryCity)
+        txtDetailIp = floatingView.findViewById(R.id.txtDetailIp)
+        btnToggle = floatingView.findViewById(R.id.btnToggle)
+
+        btnToggle.setOnClickListener {
+            toggleProxyTunnel()
+        }
 
         updateUi()
     }
 
-    private fun toggleVpnConnection() {
+    private fun toggleProxyTunnel() {
         val targetAction = if (ProxyVpnService.isConnected) {
             ProxyVpnService.ACTION_STOP
         } else {
             val active = ProfileStorage.getActiveProfile(this)
             if (active == null || active.host.isEmpty()) {
-                Toast.makeText(this, "Please configure proxy server first in app!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please set proxy server in app first!", Toast.LENGTH_SHORT).show()
                 return
             }
             ProxyVpnService.ACTION_START
@@ -99,24 +114,27 @@ class FloatingWidgetService : Service() {
         }
         startService(intent)
 
-        // Instant visual feedback
         if (targetAction == ProxyVpnService.ACTION_START) {
             imgBubble.setBackgroundResource(R.drawable.bg_floating_bubble_connected)
             imgBubble.setColorFilter(0xFF00E676.toInt())
             statusIndicatorDot.setBackgroundResource(R.drawable.bg_status_dot_connected)
-            txtCountry.text = "Connecting..."
-            txtCountry.setTextColor(0xFF00E676.toInt())
-            txtIp.text = "Routing..."
+            txtDynamicGeo.text = "CONNECTING..."
+            txtDynamicGeo.setTextColor(0xFF00E676.toInt())
             txtTimer.setTextColor(0xFF00E676.toInt())
+            btnToggle.text = "Disconnect"
+            btnToggle.backgroundTintList = ColorStateList.valueOf(0xFFE53935.toInt())
+            btnToggle.setTextColor(0xFFFFFFFF.toInt())
         } else {
             imgBubble.setBackgroundResource(R.drawable.bg_floating_bubble_disconnected)
             imgBubble.setColorFilter(0xFFFF5252.toInt())
             statusIndicatorDot.setBackgroundResource(R.drawable.bg_status_dot_disconnected)
-            txtCountry.text = "Disconnected"
-            txtCountry.setTextColor(0xFFFFFFFF.toInt())
-            txtIp.text = "IP: ---"
+            txtDynamicGeo.text = "OFF | ---"
+            txtDynamicGeo.setTextColor(0xFFFFFFFF.toInt())
             txtTimer.text = "00:00:00"
-            txtTimer.setTextColor(0xFF78909C.toInt())
+            txtTimer.setTextColor(0xFF90A4AE.toInt())
+            btnToggle.text = "Connect"
+            btnToggle.backgroundTintList = ColorStateList.valueOf(0xFF00E676.toInt())
+            btnToggle.setTextColor(0xFF000000.toInt())
         }
 
         Handler(Looper.getMainLooper()).postDelayed({ updateUi() }, 1000)
@@ -127,18 +145,24 @@ class FloatingWidgetService : Service() {
             imgBubble.setBackgroundResource(R.drawable.bg_floating_bubble_connected)
             imgBubble.setColorFilter(0xFF00E676.toInt())
             statusIndicatorDot.setBackgroundResource(R.drawable.bg_status_dot_connected)
-            txtCountry.setTextColor(0xFF00E676.toInt())
             txtTimer.setTextColor(0xFF00E676.toInt())
+            btnToggle.text = "Disconnect"
+            btnToggle.backgroundTintList = ColorStateList.valueOf(0xFFE53935.toInt())
+            btnToggle.setTextColor(0xFFFFFFFF.toInt())
             fetchRealGeoData()
         } else {
             imgBubble.setBackgroundResource(R.drawable.bg_floating_bubble_disconnected)
             imgBubble.setColorFilter(0xFFFF5252.toInt())
             statusIndicatorDot.setBackgroundResource(R.drawable.bg_status_dot_disconnected)
-            txtCountry.text = "Disconnected"
-            txtCountry.setTextColor(0xFFFFFFFF.toInt())
-            txtIp.text = "IP: ---"
+            txtDynamicGeo.text = "OFF | ---"
+            txtDynamicGeo.setTextColor(0xFFFFFFFF.toInt())
             txtTimer.text = "00:00:00"
-            txtTimer.setTextColor(0xFF78909C.toInt())
+            txtTimer.setTextColor(0xFF90A4AE.toInt())
+            txtDetailCountryCity.text = "Location: Disconnected"
+            txtDetailIp.text = "IP: ---"
+            btnToggle.text = "Connect"
+            btnToggle.backgroundTintList = ColorStateList.valueOf(0xFF00E676.toInt())
+            btnToggle.setTextColor(0xFF000000.toInt())
         }
     }
 
@@ -160,16 +184,18 @@ class FloatingWidgetService : Service() {
 
                 withContext(Dispatchers.Main) {
                     if (ProxyVpnService.isConnected) {
-                        txtCountry.text = "$country • $city"
-                        txtIp.text = realIp
-                        txtCountry.setTextColor(0xFF00E676.toInt())
+                        txtDynamicGeo.text = "$country | $realIp"
+                        txtDynamicGeo.setTextColor(0xFF00E676.toInt())
+                        txtDetailCountryCity.text = "Location: $city, $country"
+                        txtDetailIp.text = "IP: $realIp"
                     }
                 }
             } catch (_: Exception) {
                 withContext(Dispatchers.Main) {
                     if (ProxyVpnService.isConnected) {
-                        txtCountry.text = "Routing Active"
-                        txtIp.text = "Connected"
+                        txtDynamicGeo.text = "ON | Routing"
+                        txtDetailCountryCity.text = "Location: Tunnel Active"
+                        txtDetailIp.text = "IP: Active"
                     }
                 }
             }
@@ -196,7 +222,7 @@ class FloatingWidgetService : Service() {
         var initX = 0; var initY = 0; var touchX = 0f; var touchY = 0f
         var isClick = true
 
-        val dragAndClickListener = View.OnTouchListener { _, event ->
+        val touchListener = View.OnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     initX = params.x; initY = params.y
@@ -215,7 +241,10 @@ class FloatingWidgetService : Service() {
                 }
                 MotionEvent.ACTION_UP -> {
                     if (isClick) {
-                        toggleVpnConnection()
+                        // Toggle expandable card or toggle proxy
+                        isExpanded = !isExpanded
+                        cardDetails.visibility = if (isExpanded) View.VISIBLE else View.GONE
+                        if (isExpanded) updateUi()
                     }
                     true
                 }
@@ -223,8 +252,8 @@ class FloatingWidgetService : Service() {
             }
         }
 
-        imgBubble.setOnTouchListener(dragAndClickListener)
-        infoContainer.setOnTouchListener(dragAndClickListener)
+        imgBubble.setOnTouchListener(touchListener)
+        layoutPill.setOnTouchListener(touchListener)
     }
 
     override fun onDestroy() {

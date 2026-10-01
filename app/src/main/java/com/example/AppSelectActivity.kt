@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 class AppSelectActivity : AppCompatActivity() {
 
     private lateinit var rvApps: RecyclerView
+    private lateinit var btnDone: Button
     private var activeProfile: ProxyProfile? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +27,16 @@ class AppSelectActivity : AppCompatActivity() {
 
         activeProfile = ProfileStorage.getActiveProfile(this)
         rvApps = findViewById(R.id.rvApps)
+        btnDone = findViewById(R.id.btnDone)
         rvApps.layoutManager = LinearLayoutManager(this)
+
+        btnDone.setOnClickListener {
+            activeProfile?.let { prof ->
+                ProfileStorage.saveProfiles(this, listOf(prof))
+                ProfileStorage.setActiveProfileId(this, prof.id)
+            }
+            finish()
+        }
 
         val pm = packageManager
         val apps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -38,6 +49,7 @@ class AppSelectActivity : AppCompatActivity() {
         rvApps.adapter = AppAdapter(apps, pm, activeProfile?.selectedApps ?: HashSet()) {
             activeProfile?.let { prof ->
                 ProfileStorage.saveProfiles(this, listOf(prof))
+                ProfileStorage.setActiveProfileId(this, prof.id)
             }
         }
     }

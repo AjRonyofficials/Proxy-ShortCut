@@ -5,6 +5,7 @@
     android:gravity="center_horizontal"
     android:orientation="vertical">
 
+    <!-- Sleek Oval / Circular Chathead Bubble -->
     <FrameLayout
         android:id="@+id/bubbleContainer"
         android:layout_width="wrap_content"
@@ -13,75 +14,112 @@
 
         <ImageView
             android:id="@+id/imgBubble"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:background="@drawable/bg_floating_bubble_disconnected"
             android:src="@drawable/ic_proxy_shield"
             android:padding="12dp"
             android:elevation="8dp"
-            android:contentDescription="Floating Proxy Toggle" />
+            android:contentDescription="Proxy Floating Bubble" />
 
+        <!-- Live status indicator dot: Green = Connected, Red = Disconnected -->
         <View
             android:id="@+id/statusIndicatorDot"
             android:layout_width="12dp"
             android:layout_height="12dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginEnd="3dp"
+            android:layout_marginBottom="3dp"
             android:background="@drawable/bg_status_dot_disconnected"
             android:elevation="9dp" />
     </FrameLayout>
 
-    <!-- Info display directly below the floating bubble -->
+    <!-- Realtime dynamic text badge directly below bubble -->
     <LinearLayout
-        android:id="@+id/infoContainer"
-        android:layout_width="140dp"
+        android:id="@+id/layoutPill"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="5dp"
         android:background="@drawable/bg_floating_info_pill"
         android:orientation="vertical"
-        android:paddingHorizontal="10dp"
-        android:paddingVertical="7dp"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
         android:gravity="center_horizontal"
-        android:elevation="8dp">
+        android:elevation="6dp">
 
-        <!-- Country & City -->
         <TextView
-            android:id="@+id/txtCountry"
+            android:id="@+id/txtDynamicGeo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Disconnected"
+            android:text="OFF | ---"
             android:textColor="#FFFFFF"
             android:textStyle="bold"
-            android:textSize="11sp"
-            android:maxLines="1"
-            android:ellipsize="end"
+            android:textSize="10sp"
             android:gravity="center" />
 
-        <!-- IP Address -->
         <TextView
-            android:id="@+id/txtIp"
+            android:id="@+id/txtTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text="00:00:00"
+            android:textColor="#90A4AE"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- Expandable Premium Glassmorphic Compact Card -->
+    <LinearLayout
+        android:id="@+id/cardDetails"
+        android:layout_width="190dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_premium_card"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone"
+        android:elevation="12dp">
+
+        <TextView
+            android:id="@+id/txtCardTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Proxy Tunnel"
+            android:textColor="#00E676"
+            android:textStyle="bold"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/txtDetailCountryCity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Location: ---"
+            android:textColor="#CFD8DC"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/txtDetailIp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="IP: ---"
             android:textColor="#90A4AE"
-            android:textSize="10sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:gravity="center" />
+            android:textSize="10sp" />
 
-        <!-- Connection Duration -->
-        <TextView
-            android:id="@+id/txtTimer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:text="00:00:00"
-            android:textColor="#78909C"
-            android:textStyle="bold"
+        <!-- 1-Click Connect / Disconnect Action Button -->
+        <Button
+            android:id="@+id/btnToggle"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginTop="8dp"
+            android:text="Connect"
             android:textSize="11sp"
-            android:gravity="center" />
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:backgroundTint="#00E676"
+            android:padding="0dp" />
 
     </LinearLayout>
 
