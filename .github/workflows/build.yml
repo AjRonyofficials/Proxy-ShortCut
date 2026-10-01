@@ -12,22 +12,51 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
 
-    - name: Set up JDK 17
+    - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant Execute Permission for Gradlew
+    - name: Prepare Environment and Dependencies
       run: |
+        # 1. Ensure .env exists for secrets plugin
+        if [ ! -f ".env" ]; then
+          echo "Creating empty .env..."
+          touch .env
+        fi
+
+        # 2. Download native hev-socks5-tunnel.aar if missing in repo
+        if [ ! -f "app/libs/hev-socks5-tunnel.aar" ]; then
+          echo "Downloading native hev-socks5-tunnel.aar..."
+          mkdir -p app/libs
+          curl -sL -o app/libs/hev-socks5-tunnel.aar https://github.com/heiher/hev-socks5-tunnel/releases/download/2.18.0/hev-socks5-tunnel.aar
+        fi
+
+        # 3. Ensure debug.keystore exists for signingConfig debugConfig
+        if [ ! -f "debug.keystore" ]; then
+          if [ -f "debug.keystore.base64" ]; then
+            echo "Decoding debug.keystore from base64..."
+            base64 -d debug.keystore.base64 > debug.keystore
+          else
+            echo "Generating debug.keystore..."
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+        fi
+
+        # 4. Ensure gradlew is present and executable
         if [ ! -f "gradlew" ]; then
-          echo "gradlew was missing, installing gradle and generating wrapper..."
-          sudo apt-get update && sudo apt-get install -y gradle
+          echo "Generating gradlew wrapper..."
           gradle wrapper
         fi
         chmod +x gradlew
+
+    - name: Run Tests
+      run: ./gradlew testDebugUnitTest --stacktrace
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug --stacktrace
@@ -37,3 +66,4 @@ jobs:
       with:
         name: ProxyShortcut-APK
         path: app/build/outputs/apk/debug/*.apk
+        if-no-files-found: error
