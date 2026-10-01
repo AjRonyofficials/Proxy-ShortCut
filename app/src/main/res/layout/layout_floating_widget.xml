@@ -2,29 +2,50 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
     android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/imgBubble"
-        android:layout_width="54dp"
-        android:layout_height="54dp"
-        android:background="@drawable/bg_floating_bubble"
-        android:src="@drawable/ic_proxy_shield"
-        android:padding="12dp"
-        android:elevation="10dp"
-        android:contentDescription="Floating Proxy Bubble" />
-
-    <LinearLayout
-        android:id="@+id/cardDetails"
-        android:layout_width="220dp"
+    <FrameLayout
+        android:id="@+id/bubbleContainer"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_premium_card"
-        android:orientation="vertical"
-        android:padding="14dp"
-        android:visibility="gone"
-        android:elevation="10dp">
+        android:layout_gravity="center_horizontal">
 
+        <ImageView
+            android:id="@+id/imgBubble"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_floating_bubble_disconnected"
+            android:src="@drawable/ic_proxy_shield"
+            android:padding="12dp"
+            android:elevation="8dp"
+            android:contentDescription="Floating Proxy Toggle" />
+
+        <View
+            android:id="@+id/statusIndicatorDot"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/bg_status_dot_disconnected"
+            android:elevation="9dp" />
+    </FrameLayout>
+
+    <!-- Info display directly below the floating bubble -->
+    <LinearLayout
+        android:id="@+id/infoContainer"
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_floating_info_pill"
+        android:orientation="vertical"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="7dp"
+        android:gravity="center_horizontal"
+        android:elevation="8dp">
+
+        <!-- Country & City -->
         <TextView
             android:id="@+id/txtCountry"
             android:layout_width="wrap_content"
@@ -32,35 +53,36 @@
             android:text="Disconnected"
             android:textColor="#FFFFFF"
             android:textStyle="bold"
-            android:textSize="14sp" />
+            android:textSize="11sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:gravity="center" />
 
+        <!-- IP Address -->
         <TextView
             android:id="@+id/txtIp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="IP: ---"
-            android:textColor="#B0BEC5"
-            android:textSize="12sp" />
+            android:textColor="#90A4AE"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:gravity="center" />
 
+        <!-- Connection Duration -->
         <TextView
             android:id="@+id/txtTimer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="3dp"
             android:text="00:00:00"
-            android:textColor="#00E676"
+            android:textColor="#78909C"
             android:textStyle="bold"
-            android:textSize="13sp" />
+            android:textSize="11sp"
+            android:gravity="center" />
 
-        <Button
-            android:id="@+id/btnToggle"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_marginTop="10dp"
-            android:text="Connect"
-            android:textSize="12sp"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#00E676" />
     </LinearLayout>
+
 </LinearLayout>

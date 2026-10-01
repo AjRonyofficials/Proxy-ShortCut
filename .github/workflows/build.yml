@@ -21,7 +21,13 @@ jobs:
         cache: gradle
 
     - name: Grant Execute Permission for Gradlew
-      run: chmod +x gradlew
+      run: |
+        if [ ! -f "gradlew" ]; then
+          echo "gradlew was missing, installing gradle and generating wrapper..."
+          sudo apt-get update && sudo apt-get install -y gradle
+          gradle wrapper
+        fi
+        chmod +x gradlew
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug --stacktrace
